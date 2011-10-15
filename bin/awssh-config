@@ -1,0 +1,70 @@
+#! /usr/bin/env python
+
+# Copyright (c) 2011 SEOmoz
+# 
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy of this software and associated documentation files (the
+# "Software"), to deal in the Software without restriction, including
+# without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to
+# the following conditions:
+# 
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+import re
+from awssh import logger
+from awssh import SSHConfig
+from boto.ec2.connection import EC2Connection
+
+def sanitizeName(name):
+	return re.sub(r'[^\w\d]+', '-', name)
+
+# Get a list of all the instances, from all the reservations you have
+logger.info('Loading instances from AWS')
+instances = []
+for r in EC2Connection().get_all_instances():
+	instances.extend(r.instances)
+logger.info('Loaded instances.')
+
+# Load the existing ssh config
+config = SSHConfig()
+
+for instance in instances:
+	if instance.public_dns_name:
+		# These comments will be prepended to each instance's entry
+		comments = [
+			'# Id : %s' % instance.id,
+			'# Region : %s' % instance.region,
+			'# Launched : %s' % instance.launch_time
+		]
+		# Get the name if it has one
+		name = instance.tags.get('Name', '')
+		if not len(name):
+			name = instance.id
+			logger.warn('Using instance id (%s) instead of blank name' % instance.id)
+		else:
+			newName = sanitizeName(name)
+			if name != newName:
+				logger.warn('Santizing "%s" to "%s"' % (name, newName))
+				name = newName
+		config.add(name, {
+			'IdentityFile' : {'value' : '~/.ssh/%s' % instance.key_name},
+			'HostName' : {'value': instance.public_dns_name}
+		}, comments)
+	else:
+		logger.warn('Skipping dns-less instance %s' % instance.tags.get('Name', instance.id))
+
+# Save our configuration back
+config.save()
+# Tell the user about the backup
+logger.info('Saved to ~/.ssh/config, with the original backed up to ~/.ssh/config.bak')

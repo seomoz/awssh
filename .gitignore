@@ -1,0 +1,5 @@
+awssh.egg-info/*
+build/*
+dist/*
+*.pyc
+
