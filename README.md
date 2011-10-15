@@ -12,6 +12,17 @@ It's the future, and we can use ssh config. So, where's my flying car?
 Installation
 ============
 
+You'll need python's setuptools:
+
+	# On Linux:
+	sudo apt-get install python-setuptools
+	# Or, alternatively
+	sudo yum install python-setuptools
+	# On Mac
+	sudo port install py-setuptools
+
+With that installed, you're ready to rock-and-or-roll!
+
 	sudo python ./setup.py install
 
 Configuration
