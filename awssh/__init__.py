@@ -54,6 +54,50 @@ handler.setLevel(logging.DEBUG)
 logger.addHandler(handler)
 logger.setLevel(logging.DEBUG)
 
+def sanitizeName(name):
+	return re.sub(r'[^\w\d]+', '-', name)
+
+def process(connection):
+	# Get a list of all the instances, from all the reservations you have
+	logger.info('Loading instances from AWS')
+	instances = []
+	for r in connection.get_all_instances():
+		instances.extend(r.instances)
+	logger.info('Loaded instances.')
+	
+	# Load the existing ssh config
+	config = SSHConfig()
+	
+	for instance in instances:
+		if instance.public_dns_name:
+			# These comments will be prepended to each instance's entry
+			comments = [
+				'# Id : %s' % instance.id,
+				'# Region : %s' % instance.region,
+				'# Launched : %s' % instance.launch_time
+			]
+			# Get the name if it has one
+			name = instance.tags.get('Name', '')
+			if not len(name):
+				name = instance.id
+				logger.warn('Using instance id (%s) instead of blank name' % instance.id)
+			else:
+				newName = sanitizeName(name)
+				if name != newName:
+					logger.warn('Santizing "%s" to "%s"' % (name, newName))
+					name = newName
+			config.add(name, {
+				'IdentityFile' : {'value' : '~/.ssh/%s' % instance.key_name},
+				'HostName' : {'value': instance.public_dns_name}
+			}, comments)
+		else:
+			logger.warn('Skipping dns-less instance %s' % instance.tags.get('Name', instance.id))
+	
+	# Save our configuration back
+	config.save()
+	# Tell the user about the backup
+	logger.info('Saved to ~/.ssh/config, with the original backed up to ~/.ssh/config.bak')
+
 class SSHConfig(object):
 	def __init__(self):
 		self.tmp = os.path.expanduser('~/.ssh/config.tmp')

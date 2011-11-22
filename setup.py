@@ -24,12 +24,12 @@
 try:
 	from setuptools import setup
 	extra = {
-		'install_requires' : ['boto']
+		'install_requires' : ['boto', 'argparse']
 	}
 except ImportError:
 	from distutils.core import setup
 	extra = {
-		'dependencies' : ['boto']
+		'dependencies' : ['boto', 'argparse']
 	}
 
 from awssh import __version__
