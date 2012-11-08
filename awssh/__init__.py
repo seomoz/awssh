@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
 # Copyright (c) 2011 SEOmoz
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
 # "Software"), to deal in the Software without restriction, including
@@ -9,10 +9,10 @@
 # distribute, sublicense, and/or sell copies of the Software, and to
 # permit persons to whom the Software is furnished to do so, subject to
 # the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -71,10 +71,10 @@ def process(connection):
 	for r in connection.get_all_instances():
 		instances.extend(r.instances)
 	logger.info('Loaded instances.')
-	
+
 	# Load the existing ssh config
 	config = SSHConfig()
-	
+
 	for instance in instances:
 		if instance.public_dns_name:
 			# These comments will be prepended to each instance's entry
@@ -103,7 +103,7 @@ def process(connection):
 			}, comments)
 		else:
 			logger.warn('Skipping dns-less instance %s' % instance.tags.get('Name', instance.id))
-	
+
 	# Save our configuration back
 	config.save()
 	# Tell the user about the backup
@@ -154,7 +154,7 @@ class SSHConfig(object):
 
 	def save(self):
 		# Do NOT open the actual ~/.ssh/config file this way -- it will clobber it
-		# Instead, we'll have a save command that saves this file, and moves it 
+		# Instead, we'll have a save command that saves this file, and moves it
 		# to replace the existing ssh config file
 		with file(self.tmp, 'w+') as f:
 			for k, v in self.machines.items():
@@ -169,4 +169,4 @@ class SSHConfig(object):
 		# Rename the existing ssh/config, and replace it
 		os.rename(self.orig, self.bak)
 		os.rename(self.tmp, self.orig)
-				
+
