@@ -54,6 +54,13 @@ handler.setLevel(logging.DEBUG)
 logger.addHandler(handler)
 logger.setLevel(logging.DEBUG)
 
+# This sucks rocks: AWS doesn't let us change the instance keypair
+# information. So wa have to map old musty obsolete keys to shiny
+# new key file names
+ssh_key_map = {
+	'walt2-keypair': 'bigdata-20121106.pem'
+}
+
 def sanitizeName(name):
 	return re.sub(r'[^\w\d]+', '-', name)
 
@@ -86,8 +93,12 @@ def process(connection):
 				if name != newName:
 					logger.warn('Santizing "%s" to "%s"' % (name, newName))
 					name = newName
+			try:
+				ifile = ssh_key_map[instance.key_name]
+			except KeyError:
+				ifile = instance.key_name
 			config.add(name, {
-				'IdentityFile' : {'value' : '~/.ssh/%s' % instance.key_name},
+				'IdentityFile' : {'value' : '~/.ssh/%s' % ifile},
 				'HostName' : {'value': instance.public_dns_name}
 			}, comments)
 		else:
