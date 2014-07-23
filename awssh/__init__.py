@@ -58,8 +58,9 @@ logger.setLevel(logging.DEBUG)
 # information. So wa have to map old musty obsolete keys to shiny
 # new key file names
 ssh_key_map = {
-	'walt2-keypair': 'bigdata-20121106.pem',
-	'bigdata-20121106': 'bigdata-20121106.pem'
+	'walt2-keypair': 'bigdata-20140301.pem',
+	'bigdata-20121106': 'bigdata-20140301.pem',
+	'bigdata-2014-04-01': 'bigdata-20140301.pem',
 }
 
 def sanitizeName(name):
