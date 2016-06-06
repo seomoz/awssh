@@ -57,7 +57,7 @@ logger.setLevel(logging.DEBUG)
 def sanitizeName(name):
 	return re.sub(r'[^\w\d]+', '-', name)
 
-def process(connection):
+def process(connection, ssh_user_name):
 	# Get a list of all the instances, from all the reservations you have
 	logger.info('Loading instances from AWS')
 	instances = []
@@ -86,10 +86,13 @@ def process(connection):
 				if name != newName:
 					logger.warn('Santizing "%s" to "%s"' % (name, newName))
 					name = newName
-			config.add(name, {
+			config_vals = {
 				'IdentityFile' : {'value' : '~/.ssh/%s' % instance.key_name},
-				'HostName' : {'value': instance.public_dns_name}
-			}, comments)
+				'HostName' : {'value': instance.public_dns_name},
+			}
+			if ssh_user_name is not None:
+				config_vals['User'] = {'value': ssh_user_name}
+			config.add(name, config_vals, comments)
 		else:
 			logger.warn('Skipping dns-less instance %s' % instance.tags.get('Name', instance.id))
 	
@@ -158,4 +161,3 @@ class SSHConfig(object):
 		# Rename the existing ssh/config, and replace it
 		os.rename(self.orig, self.bak)
 		os.rename(self.tmp, self.orig)
-				
