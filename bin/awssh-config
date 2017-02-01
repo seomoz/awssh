@@ -32,6 +32,8 @@ parser.add_argument('--access-id', dest='accessID', default=None,
 	help='The Access ID associated with your account')
 parser.add_argument('--secret-key', dest='secretKey', default=None,
 	help='The secret key associated with your account')
+parser.add_argument('--profile', dest='profileName', default=None,
+	help='The profile of which AWS credentials to use, from your local AWS config files')
 parser.add_argument('--ssh-user-name', dest='sshUserName', default=None,
 	help='The User name to set for all records in your ssh config')
 
@@ -41,6 +43,7 @@ args = parser.parse_args()
 awssh.process(
 	ec2.EC2Connection(
 		aws_access_key_id=args.accessID,
-		aws_secret_access_key=args.secretKey),
+		aws_secret_access_key=args.secretKey,
+		profile_name=args.profileName),
 	args.sshUserName,
 )
